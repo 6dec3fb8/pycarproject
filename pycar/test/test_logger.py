@@ -11,6 +11,7 @@ import logging
 def test():
     logging.basicConfig(filename='example.log',
             filemode='w', level=logging.DEBUG)
+    
     # test: normal logging
     logging.warning("Test warning")
     logging.info("Test info")
@@ -33,5 +34,22 @@ def test():
     logging.debug("After enter another module's func")
 
 
+def test2():
+    # test format
+    logging.basicConfig(
+            format='[%(levelname)s:%(module)s:%(lineno)d]:%(name)s@%(msecs)d %(message)s',
+            filename='example.log',
+            filemode='w',
+            level=logging.DEBUG)
+    
+    # test: normal logging
+    logging.warning("Test warning")
+    logging.info("Test info")
+    logging.debug("Test debug info")
+    logging.error("Test error")
+    # logging.exception("Test exception")
+    logging.critical("Test critical")
+
+
 if __name__ == '__main__':
-    test()
+    test2()
