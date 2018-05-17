@@ -24,7 +24,7 @@ def test():
     testvar = 16
 
     logging.debug("The var is %d", testvar)
-    logging.info("The string is $s", teststr)
+    logging.info("The string is %s", teststr)
 
 
 if __name__ == '__main__':
