@@ -5,6 +5,12 @@
 
 # well there is actually no use of this file.
 # import ../logger.py
+
+# 2018-05-17 23:52 TODO:
+#   a) logging with YAML config
+#   b) logging init function wrapper
+
+
 import logging
 
 
@@ -51,5 +57,30 @@ def test2():
     logging.critical("Test critical")
 
 
+def test3():
+    # test format
+    logging.basicConfig(
+            format='[%(levelname)s:%(module)s:%(lineno)d]:%(name)s@%(msecs)d %(message)s',
+            filename='example.log',
+            filemode='w',
+            level=logging.DEBUG)
+    
+    # test named logger
+    logger = logging.getLogger(__name__)
+
+    # test: normal logger
+    logger.warning("Test warning")
+    logger.info("Test info")
+    logger.debug("Test debug info")
+    logger.error("Test error")
+    # logger.exception("Test exception")
+    logger.critical("Test critical")
+
+    # multi module test
+    logger.debug("before enter another module's function")
+    from test_logger_multimodule import testfunc_to_log as tftl
+    tftl("str1", "str2", "str3")
+    logger.debug("After enter another module's func")
+
 if __name__ == '__main__':
-    test2()
+    test3()
