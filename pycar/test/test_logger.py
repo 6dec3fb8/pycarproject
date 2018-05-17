@@ -9,6 +9,7 @@ import logging
 
 
 def test():
+    logging.basicConfig(filename='example.log', level=logging.DEBUG)
     logging.warning("Test warning")
     logging.info("Test info")
     logging.debug("Test debug info")
