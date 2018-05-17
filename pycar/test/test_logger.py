@@ -26,6 +26,12 @@ def test():
     logging.debug("The var is %d", testvar)
     logging.info("The string is %s", teststr)
 
+    # test multi-module
+    logging.debug("before enter another module's function")
+    from test_logger_multimodule import testfunc_to_log as tftl
+    tftl("str1", "str2", "str3")
+    logging.debug("After enter another module's func")
+
 
 if __name__ == '__main__':
     test()
