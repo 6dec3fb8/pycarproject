@@ -1,7 +1,11 @@
 version: 1
 formatters:
+    brief:
+        format: '%(levelname)s:%(name)s:%(message)s'
     simple:
-        format: '[%(asctime)s:%(levelname)s](%(name)s):%(message)s'
+        format: '[%(msecs)d:%(levelname)s](%(name)s):%(message)s'
+    precise:
+        format: '[%(asctime)s:%(levelname)s:module"%(module)s"](%(name)s@%(lineno)d):%(message)s'
 handlers:
     console:
         class: logging.StreamHandler
@@ -11,14 +15,12 @@ handlers:
     rollfile:
         class: logging.handlers.RotatingFileHandler
         level: DEBUG
-        formatter: simple
+        formatter: precise
         filename: log/logger.log
         maxBytes: 1048576
         backupCount: 5
 loggers:
-    logger1:
+    pycar.misc:
         handlers: [rollfile]
-    logger2:
-        handlers: [console, rollfile]
-root:
-    handlers: [console]
+    pycar.fakeGPIO:
+        handlers: [rollfile]

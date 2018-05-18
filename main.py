@@ -3,6 +3,9 @@
 
 # main entry
 
+# import pycar
+from pycar import misc
+
 def main():
     print("Dummy")
 
