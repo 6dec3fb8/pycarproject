@@ -6,39 +6,36 @@ import logging
 
 import sys
 from os import path
-print(path.abspath('..'))
+print("Parent path at:", path.abspath('..'))
 sys.path.append(
     path.join(
         path.abspath(".."),
         'pycarproject'
     )
 )
-print(sys.path)
-import pycar
-misc = pycar.misc
-# import from parent. Got some hacks here.
-# if __name__ == '__main__':
-#     if __package__ is None:
-#         import sys
-#         # from os import path
-#         sys.path.append('~/pycarproject/')
-#         from . import pycar
-# else:
-# # print(os.curdir)
-# # print(os.listdir())
-# # print(__file__, __package__, __name__)
-# # sys.path.append('..')
-# # print(sys.path)
-#     from ..pycar import misc
+# print(sys.path)
+from pycar import misc
+try:
+    from RPi import GPIO
+except:
+    import fakeGPIO as GPIO
 
 
 def test1():
     print("Test 01 for module misc")
     misc.loggerinit('log/loggingconf.yml')
-    logger =logging.getLogger(__name__)
-    logger.debug("Test01 in %s: testing logger", __name__)
+    print("Module", __name__)
+    logger = logging.getLogger('test')
+    logger.debug("Test01 in %s: testing logger 'test'", __name__)
+    # print("System modules:", sys.modules)
     print("Test RPi sim/real init")
     misc.RPiGPIOinit()
+    print("Module same test")
+    print(id(GPIO), id(misc.GPIO), id(GPIO)==id(misc.GPIO),
+          GPIO._gpio_mode, misc.GPIO._gpio_mode)
+    print("Test getmode")
+    mode = GPIO.getmode() or -1
+    logger.debug("Get mode:%d", mode)
     print("Test over.")
 
 

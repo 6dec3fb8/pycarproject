@@ -23,7 +23,6 @@ except:
 
 
 def init():
-
     pass
 
 
@@ -35,6 +34,8 @@ def loggerinit(filepath):
         # logging_conf_file = open(filepath)
         with open(filepath) as logging_conf_file:
             conf_yaml = yaml.load(logging_conf_file)
+            print("misc.loggerinit: yaml loaded is:")
+            print(conf_yaml)
             logging.config.dictConfig(conf_yaml)
         print("Logging init OK")
     except:
@@ -51,7 +52,7 @@ def loggerinit(filepath):
         )
 
 
-def RPiGPIOinit():
+def RPiGPIOinit(mode=None):
     # logging GPIO true/false
     _logger = logging.getLogger(__name__)
     if _GPIO_FAKE:
@@ -63,16 +64,21 @@ def RPiGPIOinit():
             "GPIO module import success."
         )
     # set boardmode
-    GPIO.setmode(GPIO.BOARD)
+    if mode is None:
+        _logger.debug("mode is None, use default")
+        GPIO.setmode(GPIO.BOARD)
+    else:
+        _logger.debug("Use mode %d", mode)
+        GPIO.setmode(mode)
 
 
-# test
-def _test1():
-    _logger = logging.getLogger(__name__)
-    loggerinit('./log/loggingconf.yml')
-    RPiGPIOinit()
-    _logger.debug("Test 01 finished")
-
-
-if __name__ == '__main__':
-    _test1()
+# test: DEPRECATED
+# def _test1():
+#     _logger = logging.getLogger(__name__)
+#     loggerinit('./log/loggingconf.yml')
+#     RPiGPIOinit()
+#     _logger.debug("Test 01 finished")
+#
+#
+# if __name__ == '__main__':
+#     _test1()

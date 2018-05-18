@@ -21,6 +21,18 @@ handlers:
         backupCount: 5
 loggers:
     pycar.misc:
+        level: DEBUG
         handlers: [rollfile]
-    pycar.fakeGPIO:
+    fakeGPIO:
+        level: DEBUG
         handlers: [rollfile]
+    __main__:
+        level: DEBUG
+        handlers: [console]
+    test:
+        level: DEBUG
+        handlers: [console]
+
+# root:
+#    level: DEBUG
+#    handlers: [console]
