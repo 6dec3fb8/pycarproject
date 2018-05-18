@@ -12,12 +12,15 @@
 
 
 import logging
+import logging.config
+import yaml
+import os
 
 
 def test():
     logging.basicConfig(filename='example.log',
             filemode='w', level=logging.DEBUG)
-    
+
     # test: normal logging
     logging.warning("Test warning")
     logging.info("Test info")
@@ -47,7 +50,7 @@ def test2():
             filename='example.log',
             filemode='w',
             level=logging.DEBUG)
-    
+
     # test: normal logging
     logging.warning("Test warning")
     logging.info("Test info")
@@ -64,7 +67,7 @@ def test3():
             filename='example.log',
             filemode='w',
             level=logging.DEBUG)
-    
+
     # test named logger
     logger = logging.getLogger(__name__)
 
@@ -82,5 +85,35 @@ def test3():
     tftl("str1", "str2", "str3")
     logger.debug("After enter another module's func")
 
+
+def test4():
+    # file config: log/loggingconf.yml
+    pwd = os.curdir
+    print(pwd)
+    print(os.listdir())
+    # return
+    logging_conf_file = open('./log/loggingconf.yml')
+    conf_yaml = yaml.load(logging_conf_file)
+
+    logging.config.dictConfig(conf_yaml)
+    logger = logging.getLogger('logger2')
+
+    # simple logging tests.
+
+    # test: normal logger
+    logger.warning("Test warning")
+    logger.info("Test info")
+    logger.debug("Test debug info")
+    logger.error("Test error")
+    # logger.exception("Test exception")
+    logger.critical("Test critical")
+
+    # multi module test
+    logger.debug("before enter another module's function")
+    from test_logger_multimodule import testfunc_to_log as tftl
+    tftl("str1", "str2", "str3")
+    logger.debug("After enter another module's func")
+
+
 if __name__ == '__main__':
-    test3()
+    test4()
