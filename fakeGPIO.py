@@ -11,7 +11,7 @@ _gpio_mode = None
 
 def setmode(mode):
     global _gpio_mode
-    print("setmode", __name__)
+    # print("setmode", __name__)
     _gpio_mode = mode
     logger = logging.getLogger(__name__)
     logger.info("Set mode to %s",
@@ -26,4 +26,37 @@ def getmode():
     return _gpio_mode
 
 
+# class PWM for motor control.
+class PWM:
+    """
+    A fake PWM class for testing.
+    """
+    def __init__(self, channel, frequency):
+        self.channel = channel
+        self.frequency = frequency
+        self._ison = False
+        self.dutycycle = 0
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("PWM Ch#%d created at freq %d", self.channel, self.frequency)
+
+
+    def start(self, dutycycle):
+        self._ison = True
+        self.dutycycle = dutycycle
+        self.logger.info("PWM Ch#%d starts at dc=%d", self.channel, self.dutycycle)
+
+
+    def ChangeFrequency(self, freq):
+        self.frequency = freq
+        self.logger.info("PWM Ch#%d changed frequency to %d", self.channel, self.frequency)
+
+
+    def ChangeDutyCycle(self, dc):
+        self.dutycycle = dc
+        self.logger.info("PWM Ch#%d changed dutycycle to %d", self.channel, self.dutycycle)
+
+
+    def stop(self):
+        self._ison = False
+        self.logger.info("PWM Ch#%d stops", self.channel)
 

@@ -22,8 +22,11 @@ except:
     _GPIO_FAKE = True
 
 
-def init():
-    pass
+def init(mode = None):
+    # print("Initialize logger")
+    loggerinit('log/loggingconf.yml')
+    # print("Initialize RPi GPIO board mode")
+    RPiGPIOinit(mode)
 
 
 # default config file is in ./log/loggingconf.yml
