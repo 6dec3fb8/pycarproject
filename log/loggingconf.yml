@@ -23,6 +23,9 @@ loggers:
     pycar.misc:
         level: DEBUG
         handlers: [rollfile]
+    pycar.motor:
+        level: DEBUG
+        handlers: [rollfile]
     fakeGPIO:
         level: DEBUG
         handlers: [rollfile]

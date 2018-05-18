@@ -26,6 +26,13 @@ def getmode():
     return _gpio_mode
 
 
+def cleanup(port=None):
+    logger = logging.getLogger(__name__)
+    if port:
+        logger.warning("GPIO cleans up ALL ports")
+    else:
+        logger.info("GPIO cleanup port %d", port)
+
 # class PWM for motor control.
 class PWM:
     """

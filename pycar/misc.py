@@ -75,6 +75,14 @@ def RPiGPIOinit(mode=None):
         GPIO.setmode(mode)
 
 
+def getpwm(port, freq):
+    logger = logging.getLogger(__name__)
+    logger.info("call to get pwm Ch#%d with freq %d",
+                port, freq)
+    p = GPIO.PWM(port, freq)
+    return p
+
+
 # test: DEPRECATED
 # def _test1():
 #     _logger = logging.getLogger(__name__)
