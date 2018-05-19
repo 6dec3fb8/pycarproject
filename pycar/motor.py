@@ -3,8 +3,8 @@
 # this file contains class motor.
 
 # TODO:
-# a) class motor
-# b) (maybe) class for whole movement(2 motor control)
+# [*] class motor
+# [ ] (maybe) class for whole movement(2 motor control)
 
 import logging
 
@@ -87,4 +87,50 @@ class Motor:
         self.pwm_backward = misc.getpwm(port_backward, self.freq)
         self.pwm_forward.start(0)
 
+
+    def __del__(self):
+        """
+        just cleanup.
+        """
+        self.currentspeed = 0
+        port_forward, port_backward = self._type
+        self.logger.debug("pf:%d, pb:%d", port_forward, port_backward)
+        misc.GPIO.cleanup(port_forward)
+        misc.GPIO.cleanup(port_backward)
+
+
+# used for whole control.
+class MotorDifferentor:
+    """
+    For controlling 2 motor with v+-deltav
+    deltav    direction
+      +         right
+      -         left
+    """
+
+    def __init__(self, plforward, plbackward, prforward, prbackward):
+        self.logger = logging.getLogger(__name__)
+        self.logger.info(
+            "MotorDifferentor(lf:%d, lb:%d, rf:%d, rb:%d) created.",
+            plforward, plbackward, prforward, prbackward
+        )
+        self.motorleft = Motor(plforward, plbackward)
+        self.motorright = Motor(prforward, prbackward)
+
+
+    def __del__(self):
+        self.logger.info("MotorDifferentor is being deconstructed")
+        self.motorleft = None
+        self.motorright = None
+
+
+    def set_speed(self, v, deltav):
+        self.logger.info(
+            "MotorDifferentor set_speed(%d, %d)=>(left:%d, right:%d)",
+            v, deltav, v+deltav, v-deltav
+        )
+        if v+deltav>100 or v+deltav<-100 or v-deltav>100 or v-deltav<-100:
+            self.logger.warning("Speed may be cut due to overflow!")
+        self.motorleft.set_speed(v+deltav)
+        self.motorright.set_speed(v-deltav)
 

@@ -6,6 +6,8 @@ import logging
 
 BOARD = 1
 BCM = 2
+IN = -1
+OUT = -2
 _gpio_mode = None
 
 
@@ -28,10 +30,16 @@ def getmode():
 
 def cleanup(port=None):
     logger = logging.getLogger(__name__)
-    if port:
+    if port is None:
         logger.warning("GPIO cleans up ALL ports")
     else:
         logger.info("GPIO cleanup port %d", port)
+
+
+def setup(port, iomode):
+    logger = logging.getLogger(__name__)
+    logger.info("Set port %d to mode %s",
+                port, "OUT" if iomode==OUT else "IN")
 
 # class PWM for motor control.
 class PWM:

@@ -79,6 +79,7 @@ def getpwm(port, freq):
     logger = logging.getLogger(__name__)
     logger.info("call to get pwm Ch#%d with freq %d",
                 port, freq)
+    GPIO.setup(port, GPIO.OUT)
     p = GPIO.PWM(port, freq)
     return p
 
