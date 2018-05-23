@@ -9,6 +9,6 @@
 
 
 # for initialization
-from . import misc
+from . import misc, motor
 
-__all__ = ['misc', ]
+__all__ = ['misc', 'motor',]
