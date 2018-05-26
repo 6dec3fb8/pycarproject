@@ -96,7 +96,7 @@ def _test_1():
         vcam = PiCamera()
     else:
         vcam = cv2.VideoCapture(0)
-    vcam.set(cv2.CAP_PROP_XI_EXPOSURE, -9)
+        # vcam.set(cv2.CAP_PROP_XI_EXPOSURE, -9)
     contour_list = _get_contour_list(vcam, _debug=True)
     print(contour_list)
     time.sleep(0.5)
