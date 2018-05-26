@@ -45,7 +45,44 @@ def _read_image(cam, resolution = (640, 480)):
     return image
 
 
-def _get_contour_list(vcamera, show_image=False, resolution=(640, 480), threshold=220, max_returns=-1, _debug=False):
+def _process_image(img, threshold, _debug):
+    # imgHLS = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
+    imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    # imgsplit = cv2.split(imgHLS)
+    imgsplit = cv2.split(imgHSV)
+    # show H, S and V
+    if _debug:
+        cv2.imshow('H',imgsplit[0])
+        cv2.imshow('S',imgsplit[1])
+        cv2.imshow('V',imgsplit[2])
+        cv2.waitKey(0)
+    ret, imgBi = cv2.threshold(
+            imgsplit[2],
+            threshold,
+            255,
+            cv2.THRESH_BINARY
+            )
+    if not ret:
+        return None
+    if _debug:
+        cv2.imshow('Bi', imgBi)
+        cv2.waitKey(0)
+    # img_final = cv2.GaussianBlur(imgBi, (3, 3), 1.5)
+    close_kernel = cv2.getStructuringElement(
+            cv2.MORPH_RECT, (3, 3)
+            )
+    img_final = cv2.morphologyEx(
+            imgBi, cv2.MORPH_CLOSE, close_kernel
+            )
+    if _debug:
+        cv2.imshow('Biclose', img_final)
+        cv2.waitKey(0)
+    return img_final
+
+
+def _get_contour_list(vcamera, show_image=False,
+        resolution=(640, 480), threshold=220,
+        max_returns=-1, _debug=False):
     """
     return a list of contour location and size.
     max_returns < 0 means return all the contours.
@@ -58,16 +95,18 @@ def _get_contour_list(vcamera, show_image=False, resolution=(640, 480), threshol
     if _debug:
         cv2.imshow('Camera', img)
         cv2.waitKey(0)
-    imgHLS = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-    imgsplit = cv2.split(imgHLS)
-    # show H, S and V
-    if _debug:
-        cv2.imshow('H',imgsplit[0])
-        cv2.imshow('L',imgsplit[1])
-        cv2.imshow('S',imgsplit[2])
-        cv2.waitKey(0)
+    img_proceed = _process_image(img, threshold, _debug)
     # TODO:
-    # WIP
+    # Calc contours and return.
+    # contours, hierarchy = cv2.findContours(img_proceed, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    img_tmp, contours, hierarchy = cv2.findContours(img_proceed, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    img_contour = np.empty(img_proceed.shape)
+    cv2.drawContours(img_contour, contours,
+            -1,  # draw all contours
+            (0, 255, 0) # greem
+            )
+    cv2.imshow('contours', img_contour)
+    cv2.waitKey(0)
     pass
 
 
@@ -98,10 +137,12 @@ class ContourProducingThread(threading.Thread):
 def _test_1():
     if _use_picamera:
         vcam = PiCamera()
+        # vcam.exposure_mode = 'off'
+        vcam.exposure_compensation = -15
     else:
         vcam = cv2.VideoCapture(0)
         # vcam.set(cv2.CAP_PROP_XI_EXPOSURE, -9)
-    contour_list = _get_contour_list(vcam, _debug=True)
+    contour_list = _get_contour_list(vcam) # , _debug=True)
     print(contour_list)
     time.sleep(0.5)
     if _use_picamera:
