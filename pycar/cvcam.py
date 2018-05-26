@@ -48,7 +48,7 @@ def _get_contour_list(vcamera, show_image=False, resolution=(640, 480), threshol
     """
     # ret, img = cvcamera.read()
     img = _read_image(vcamera, resolution)
-    if not img:
+    if img is not None:
         # opencv failed
         return None
     if _debug:
