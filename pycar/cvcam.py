@@ -28,6 +28,7 @@ except:
 # functions
 
 def _read_image(cam, resolution = (640, 480)):
+    image = None
     if _use_picamera:
         # assume that cam is type 'PiCamera'
         wid, hei = resolution
@@ -35,6 +36,7 @@ def _read_image(cam, resolution = (640, 480)):
         image = np.empty(nparrsize, dtype=np.uint8)
         cam.resolution = resolution
         cam.capture(image, 'bgr')
+        print(image)
     else:
         # assume that cam in type'cv2.VideoCapture
         res, image = cam.read()
@@ -50,7 +52,7 @@ def _get_contour_list(vcamera, show_image=False, resolution=(640, 480), threshol
     """
     # ret, img = cvcamera.read()
     img = _read_image(vcamera, resolution)
-    if img is not None:
+    if img is None:
         # opencv failed
         return None
     if _debug:
@@ -102,6 +104,10 @@ def _test_1():
     contour_list = _get_contour_list(vcam, _debug=True)
     print(contour_list)
     time.sleep(0.5)
+    if _use_picamera:
+        vcam.close()
+    else:
+        vcam.release()
 
 
 # main
