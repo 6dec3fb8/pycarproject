@@ -33,6 +33,7 @@ def _read_image(cam, resolution = (640, 480)):
         wid, hei = resolution
         nparrsize = (hei, wid, 3)
         image = np.empty(nparrsize, dtype=np.uint8)
+        cam.resolution = resolution
         cam.capture(image, 'bgr')
     else:
         # assume that cam in type'cv2.VideoCapture
