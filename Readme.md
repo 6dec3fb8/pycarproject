@@ -1,5 +1,7 @@
 # The Python-RaspberryPi SmartCar
 
+An small python-written package to control a smart car using *RaspberryPi*.
+
 ## Introduction
 
 This repo is for the DPI SRT project.
