@@ -27,6 +27,30 @@ except:
 
 # functions
 
+def _get_video(index=0):
+    """
+    get the video #index. Will check whether use normal or pycamera.
+    :param int index: the index of camera. Ignored if using PiCamera.
+    """
+    if _use_picamera:
+        vcam = PiCamera()
+        vcam.exposure_compensation = -15
+    else:
+        vcam = cv2.VideoCapture(index)
+        # vcam.set(cv2.CAP_PROP_XI_EXPOSURE, -9)
+    return vcam
+
+
+def _release_video(vcam):
+    """
+    release the video by different video type.
+    """
+    if _use_picamera:
+        vcam.close()
+    else:
+        vcam.release()
+
+
 def _read_image(cam, resolution = (640, 480)):
     image = None
     if _use_picamera:
@@ -174,15 +198,37 @@ def _debug_paint_contour_and_masscenter(contourinfo, shape):
     cv2.waitKey(0)
 
 
+def _print_contour_info(contourinfo):
+    """
+    DEBUGGING function!
+    :param list contourinfo:
+        list of tuple (x: int, y: int, area: float, contour: list)
+    """
+    format_data = []
+    for x, y, area, _ in contourinfo:
+        format_data.append(
+            "<Contour(%d, %d):%f>" % (
+                x, y, area
+            )
+        )
+    print('[', ', '.join(format_data), ']')
+
 class ContourProducingThread(threading.Thread):
     """
     the thread to produce light contours per 0.5s
     """
-    def __init__(self, queueCtlr, queueOut, time_interval=0.5):
+    def __init__(self, stop_event, queue_out, time_interval=0.5):
+        """
+        The constructor of the thread.
+        :param threading.Event stop_event:
+            when this event is set, the whole thread stops.
+        :param queue queue_out: The queue to put data produced
+        :param float time_interval: Seconds between each VideoCapture.
+        """
         super(ContourProducingThread, self).__init__()
         self._t_interval = time_interval
-        self._q_control = queueCtlr
-        self._q_output = queueOut
+        self._stop_event = stop_event
+        self._q_output = queue_out
         self._logger = logging.getLogger(__name__)
         self._logger.info(
             "Contour producer is constructed."
@@ -193,28 +239,31 @@ class ContourProducingThread(threading.Thread):
     def run(self):
         # TODO:
         # job
-        pass
+        self._logger.info("ContourProducingThread is running.")
+        while not self._stop_event.is_set():
+            # do the producer job
+            time.sleep(self._t_interval)
+        # exiting the thread
+        self._logger.info("Contour producer Thread exit.")
 
 
 # test drive
 
 def _test_1():
-    if _use_picamera:
-        vcam = PiCamera()
-        vcam.exposure_compensation = -15
-    else:
-        vcam = cv2.VideoCapture(0)
-        # vcam.set(cv2.CAP_PROP_XI_EXPOSURE, -9)
+    vcam = _get_video()
     _, tempimage = vcam.read()
     x, y, _ = tempimage.shape
-    contour_list = _get_contour_list(vcam, threshold=240,  _debug=False) # , _debug=True)
-    print(contour_list)
+    contour_list = _get_contour_list(
+        vcam,
+        threshold=240,
+        max_returns=3,
+        _debug=True
+    ) # , _debug=True)
+    # print(contour_list)
+    _print_contour_info(contour_list)
     _debug_paint_contour_and_masscenter(contour_list, (x, y))
-    time.sleep(3)
-    if _use_picamera:
-        vcam.close()
-    else:
-        vcam.release()
+    # time.sleep(3)
+    _release_video(vcam)
 
 
 # main
