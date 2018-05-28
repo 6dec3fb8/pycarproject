@@ -3,13 +3,13 @@ The Python-RaspberryPi SmartCar
 
 ## Introduction
 
-This `repo` is for the DPI SRT project.
+This repo is for the DPI SRT project.
 The SRT requires us to:
 - Build a smart car and control it with a RaspberryPi
 - Use sensors(camera, Ultrasonic sonar, Infrared detector, etc)
   to detect a lighting object and get close to it, without being
   too close.
-Then this `repo` is used to finish this project.
+Then this repo is used to finish this project.
 
 ## Basic structure
 
@@ -20,7 +20,7 @@ This repo currently contains the following modules:
   image to find the light object and put the coordinate into an
   given queue
 
-Some modules that passed the test but not belong to this `repo` :
+Some modules that passed the test but not belong to this repo :
 - A simple TCP server that will receive connection from my PC
   and receive commands to control its movement.
 
@@ -53,7 +53,7 @@ from pycar import misc
 misc.RPiGPIOinit([GPIO.some_naming_mode])
 ```
 
-To get the contour data, you need first prepare an queue `import queue`,
+To get the contour data, you need first prepare an `queue.Queue`(better limited length),
 and an event object `threading.Event` to send the **EXIT** message to the thread.
 
 When getting data from the queue, **Be careful to catch the `queue.Empty` exception!**
