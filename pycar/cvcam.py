@@ -8,7 +8,7 @@
 # thread,0.5s->data->queue
 #
 # A contour list is:
-# [ [x, y, area], * ]
+# [ (x, y, area, contour), * ]
 # and will sort by area.
 
 # imports
@@ -17,6 +17,7 @@ import logging
 import cv2
 import threading
 import time
+import queue
 import numpy as np
 try:
     from picamera import PiCamera
@@ -24,6 +25,12 @@ try:
 except:
     _use_picamera = False
 
+TC_RED = (0, 0, 255)
+TC_GREEN = (0, 255, 0)
+TC_BLUE = (255, 0, 0)
+
+_contour_color = TC_RED
+_center_color = TC_GREEN
 
 # functions
 
@@ -52,6 +59,11 @@ def _release_video(vcam):
 
 
 def _read_image(cam, resolution = (640, 480)):
+    """
+    Read an image from camera.
+    Resolution is ignored when using system camera.
+    However it is useful when using on Raspi.
+    """
     image = None
     if _use_picamera:
         # assume that cam is type 'PiCamera'
@@ -60,7 +72,7 @@ def _read_image(cam, resolution = (640, 480)):
         image = np.empty(nparrsize, dtype=np.uint8)
         cam.resolution = resolution
         cam.capture(image, 'bgr')
-        print(image)
+        # print(image)
     else:
         # assume that cam in type'cv2.VideoCapture
         res, image = cam.read()
@@ -70,6 +82,9 @@ def _read_image(cam, resolution = (640, 480)):
 
 
 def _process_image(img, threshold, _debug):
+    """
+    To process the image and return an binary image.
+    """
     # imgHLS = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     # imgsplit = cv2.split(imgHLS)
@@ -160,13 +175,17 @@ def _get_contour_list(vcamera, show_image=False,
         print("Contours:", contours)
         print("Hierachy:", hierarchy)
 
-    img_contour = np.zeros((*img_proceed.shape, 3), dtype=np.uint8)
+    # img_contour = np.zeros((*img_proceed.shape, 3), dtype=np.uint8)
     if contours:
-        cv2.drawContours(img_contour, contours,
-                -1,  # draw all contours
-                (0, 255, 0) # greem
-                )
-    cv2.imshow('contours', img_contour)
+        # cv2.drawContours(img_contour, contours,
+        # draw on source picture
+        img_show = cv2.drawContours(img, contours,
+                    -1,  # draw all contours
+                    # (0, 255, 0) # green
+                    _contour_color
+                    )
+    # cv2.imshow('contours', img_contour)
+    cv2.imshow('contours', img_show)
     if _debug:
         cv2.waitKey(0)
     cv2.waitKey(1)
@@ -190,10 +209,10 @@ def _debug_paint_contour_and_masscenter(contourinfo, shape):
     points = [(item[0], item[1]) for item in contourinfo]
     image = np.zeros((*shape, 3), dtype=np.uint8)
     #                                          V--green
-    cv2.drawContours(image, contours, -1, (0, 255, 0))
+    cv2.drawContours(image, contours, -1, _contour_color)
     for p in points:
         #                               V---red
-        cv2.circle(image, p, 2, (0, 0, 255))
+        cv2.circle(image, p, 2, _center_color)
     cv2.imshow('Contours and center', image)
     cv2.waitKey(0)
 
@@ -215,9 +234,10 @@ def _print_contour_info(contourinfo):
 
 class ContourProducingThread(threading.Thread):
     """
-    the thread to produce light contours per 0.5s
+    The thread used to produce light contours per 0.5s
     """
-    def __init__(self, stop_event, queue_out, time_interval=0.5):
+    def __init__(self, stop_event, queue_out, time_interval=0.5,
+                 threshold=220, max_returns=1):
         """
         The constructor of the thread.
         :param threading.Event stop_event:
@@ -229,6 +249,10 @@ class ContourProducingThread(threading.Thread):
         self._t_interval = time_interval
         self._stop_event = stop_event
         self._q_output = queue_out
+        self._threshold = threshold
+        self._max_returns = max_returns
+        # initialize the camera
+        self._vcam = _get_video()
         self._logger = logging.getLogger(__name__)
         self._logger.info(
             "Contour producer is constructed."
@@ -242,6 +266,22 @@ class ContourProducingThread(threading.Thread):
         self._logger.info("ContourProducingThread is running.")
         while not self._stop_event.is_set():
             # do the producer job
+            contour_info_list = _get_contour_list(
+                self._vcam,
+                self._threshold,
+                self._max_returns
+            )
+            # write
+            try:
+                self._q_output.put_nowait(contour_info_list)
+            except queue.Full:
+                self._logger.warning(
+                    "Queue put fail! Not syncing"
+                )
+            else:
+                self._logger.info(
+                    "Inserted an contour info."
+                )
             time.sleep(self._t_interval)
         # exiting the thread
         self._logger.info("Contour producer Thread exit.")
@@ -266,6 +306,37 @@ def _test_1():
     _release_video(vcam)
 
 
+def _test_2():
+    time_interval = 0.05
+    stop_event = threading.Event()
+    q = queue.Queue(5)
+    th = ContourProducingThread(
+        stop_event,
+        q,
+        time_interval
+    )
+    th.start()
+    try:
+        while True:
+            try:
+                item = q.get_nowait()
+            except queue.Empty:
+                print("Queue empty! Not syncing")
+            else:
+                if item:
+                    x, y, area, _ = item[0]
+                    print("Detected contour at (%d, %d) with area of %f" %
+                          (x, y, area))
+                else:
+                    print("No contour detected!")
+            time.sleep(time_interval + 0.02)
+    except KeyboardInterrupt:
+        stop_event.set()
+        th.join()
+        print()
+        print("Exiting...")
+
+
 # main
 if __name__ == '__main__':
-    _test_1()
+    _test_2()
