@@ -2,7 +2,7 @@
 
 # test for misc.py
 
-import logging
+# import logging
 
 import sys
 from os import path
@@ -13,6 +13,7 @@ sys.path.append(
         'pycarproject'
     )
 )
+import mylogger
 # print(sys.path)
 from pycar import misc
 try:
@@ -24,11 +25,12 @@ except:
 def test1():
     # test PWM functions
     print("Initialize logger")
-    misc.loggerinit('log/loggingconf.yml')
+    # misc.loggerinit('log/loggingconf.yml')
+    mylogger.loggerinit('log/loggingconf.yml')
     print("Initialize RPi GPIO board mode")
     misc.RPiGPIOinit()
     print("Begin test1 of PWM")
-    logger = logging.getLogger('test')
+    logger = mylogger.getLogger('test')
     logger.info("PWM test start.")
     p = GPIO.PWM(12, 100)
     p.start(100)

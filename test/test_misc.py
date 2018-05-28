@@ -2,7 +2,7 @@
 
 # test for misc.py
 
-import logging
+# import logging
 
 import sys
 from os import path
@@ -13,6 +13,8 @@ sys.path.append(
         'pycarproject'
     )
 )
+
+import logger
 # print(sys.path)
 from pycar import misc
 try:
@@ -23,10 +25,19 @@ except:
 
 def test1():
     print("Test 01 for module misc")
-    misc.loggerinit('log/loggingconf.yml')
+    from os import path
+    print(path.abspath(path.curdir))
+    logger.loggerinit(
+        path.join(
+            path.abspath('.'),
+            'log/loggingconf.yml'
+        )
+    )
+    # misc.loggerinit('log/loggingconf.yml')
     print("Module", __name__)
-    logger = logging.getLogger('test')
-    logger.debug("Test01 in %s: testing logger 'test'", __name__)
+    # logger = logging.getLogger('test')
+    _logger = logger.getLogger('test')
+    _logger.debug("Test01 in %s: testing logger 'test'", __name__)
     # print("System modules:", sys.modules)
     print("Test RPi sim/real init")
     misc.RPiGPIOinit()
@@ -35,7 +46,7 @@ def test1():
           GPIO._gpio_mode, misc.GPIO._gpio_mode)
     print("Test getmode")
     mode = GPIO.getmode() or -1
-    logger.debug("Get mode:%d", mode)
+    _logger.debug("Get mode:%d", mode)
     print("Test over.")
 
 

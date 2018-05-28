@@ -5,7 +5,9 @@
 
 import logging
 import logging.config
-import yaml
+# deprecated
+# import yaml
+
 try:
     import RPi.GPIO as GPIO
     _GPIO_FAKE = False
@@ -22,37 +24,10 @@ except:
     _GPIO_FAKE = True
 
 
+# may also deprecate
 def init(mode = None):
-    # print("Initialize logger")
-    loggerinit('log/loggingconf.yml')
     # print("Initialize RPi GPIO board mode")
     RPiGPIOinit(mode)
-
-
-# default config file is in ./log/loggingconf.yml
-# however, it is not provided as a default param.
-def loggerinit(filepath):
-    # initialize the global logger config
-    try:
-        # logging_conf_file = open(filepath)
-        with open(filepath) as logging_conf_file:
-            conf_yaml = yaml.load(logging_conf_file)
-            print("misc.loggerinit: yaml loaded is:")
-            print(conf_yaml)
-            logging.config.dictConfig(conf_yaml)
-        print("Logging init OK")
-    except:
-        # file not exist: just use logging default.
-        # however an error will be recorded
-        print("Logging file failed")
-        logging.basicConfig(
-            format='[%(asctime)s %(levelname)s]%(name)s:%(message)s',
-            level = logging.DEBUG
-        )
-        logging.error(
-            "Config file %s is missing or not able to open.",
-            filepath
-        )
 
 
 def RPiGPIOinit(mode=None):
