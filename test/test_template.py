@@ -4,7 +4,7 @@
 
 test_subject = 'Template'
 
-import logging
+# import logging
 
 import sys
 from os import path
@@ -16,7 +16,11 @@ sys.path.append(
     )
 )
 # print(sys.path)
-from pycar import misc
+from pycar import (
+    misc,
+    # modules to be tested
+)
+import mylogger
 
 #GPIO, may mot used.
 try:
@@ -28,11 +32,12 @@ except:
 def test1():
     # test PWM functions
     print("Initialize logger")
-    misc.loggerinit('log/loggingconf.yml')
+    # misc.loggerinit('log/loggingconf.yml')
+    mylogger.loggerinit('log/loggingconf.yml')
     print("Initialize RPi GPIO board mode")
     misc.RPiGPIOinit()
     print("Begin test %s" % test_subject)
-    logger = logging.getLogger('test')
+    logger = mylogger.getLogger('test')
     logger.info("Test of %s start.", test_subject)
     # TODO:
     # add test-code here.

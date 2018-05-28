@@ -28,7 +28,7 @@ def loggerinit(filepath):
         return False
 
     conf_yaml = yaml.load(logging_conf_file)
-    print("misc.loggerinit: yaml loaded is:")
+    print("mylogger.loggerinit: yaml loaded is:")
     print(conf_yaml)
     logging.config.dictConfig(conf_yaml)
     print("Logging init OK")
