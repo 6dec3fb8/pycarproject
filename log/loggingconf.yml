@@ -16,28 +16,32 @@ handlers:
         class: logging.handlers.RotatingFileHandler
         level: DEBUG
         formatter: precise
-        filename: log/logger.log
+        filename: log/commonlog.log
         maxBytes: 1048576
         backupCount: 5
+    warninglogger:
+        class: logging.handlers.RotatingFileHandler
+        level: WARNING
+        formatter: precise
+        filename: log/warnings.log
+        maxBytes: 1048576
+        backupCount: 2
 loggers:
-    pycar.misc:
+    pycar:
         level: DEBUG
-        handlers: [rollfile]
-    pycar.motor:
-        level: DEBUG
-        handlers: [rollfile]
+        handlers: [rollfile, warninglogger]
     pycar.server:
         level: DEBUG
-        handlers: [rollfile]
+        handlers: [rollfile, warninglogger]
     fakeGPIO:
         level: DEBUG
-        handlers: [rollfile]
+        handlers: [rollfile, warninglogger]
     __main__:
         level: DEBUG
-        handlers: [console]
+        handlers: [console, warninglogger]
     test:
         level: DEBUG
-        handlers: [console]
+        handlers: [console, warninglogger]
 
 # root:
 #    level: DEBUG

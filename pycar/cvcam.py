@@ -94,6 +94,7 @@ class ContourProducingThread(threading.Thread):
 def _test_1():
     if _use_picamera:
         vcam = PiCamera()
+        vcam.exposure_compensation = -15
     else:
         vcam = cv2.VideoCapture(0)
     vcam.set(cv2.CAP_PROP_XI_EXPOSURE, -9)
