@@ -1,5 +1,4 @@
-The Python-RaspberryPi SmartCar
--------------------------------
+#The Python-RaspberryPi SmartCar
 
 ## Introduction
 
