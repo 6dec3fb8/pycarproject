@@ -68,3 +68,6 @@ TODO:
 
 Deprecated:
 - [ ] bluetooth controller(with multi-threading)
+
+Planned:
+- [ ] Use sched to control exact ticks.(eg. 30tick/sec)
