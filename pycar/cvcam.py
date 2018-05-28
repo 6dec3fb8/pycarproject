@@ -11,6 +11,9 @@
 # [ (x, y, area, contour), * ]
 # and will sort by area.
 
+__all__ = [
+    'ContourProducingThread',
+]
 # imports
 
 import logging
