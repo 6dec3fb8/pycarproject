@@ -237,9 +237,9 @@ def _print_contour_info(contourinfo):
 
 class ContourProducingThread(threading.Thread):
     """
-    The thread used to produce light contours per 0.5s
+    The thread used to produce light contours per 0.05s
     """
-    def __init__(self, stop_event, queue_out, time_interval=0.5,
+    def __init__(self, buf_size=3, time_interval=0.05,
                  threshold=220, max_returns=1):
         """
         The constructor of the thread.
@@ -250,8 +250,11 @@ class ContourProducingThread(threading.Thread):
         """
         super(ContourProducingThread, self).__init__()
         self._t_interval = time_interval
-        self._stop_event = stop_event
-        self._q_output = queue_out
+        # changed to attributes(properties)
+        self._exit_event = threading.Event()
+        self._q_output = queue.Queue(buf_size)
+        # noticer
+        self._condition_noticer = threading.Condition()
         self._threshold = threshold
         self._max_returns = max_returns
         # initialize the camera
@@ -267,7 +270,7 @@ class ContourProducingThread(threading.Thread):
         # TODO:
         # job
         self._logger.info("ContourProducingThread is running.")
-        while not self._stop_event.is_set():
+        while not self._exit_event.is_set():
             # do the producer job
             contour_info_list = _get_contour_list(
                 self._vcam,
@@ -275,19 +278,46 @@ class ContourProducingThread(threading.Thread):
                 self._max_returns
             )
             # write
-            try:
-                self._q_output.put_nowait(contour_info_list)
-            except queue.Full:
-                self._logger.warning(
-                    "Queue put fail! Not syncing"
-                )
-            else:
+            with self._condition_noticer:
+                try:
+                    self._q_output.put_nowait(contour_info_list)
+                except queue.Full:
+                    # drop 1
+                    self._logger.warning("Dropped 1 data!")
+                    self._q_output.get()
+                    self._q_output.put_nowait(contour_info_list)
+                # Notice all waitiog threads that the data is produced and ready to be used.
+                self._condition_noticer.notify_all()
                 self._logger.info(
                     "Inserted an contour info."
                 )
             time.sleep(self._t_interval)
         # exiting the thread
         self._logger.info("Contour producer Thread exit.")
+
+    @property
+    def exit_event(self):
+        return self._exit_event
+
+    @exit_event.setter
+    def exit_event(self, value):
+        raise RuntimeError("Cannot change exit_event at runtime!")
+
+    @property
+    def queue_out(self):
+        return self._q_output
+
+    @queue_out.setter
+    def queue_out(self, value):
+        raise RuntimeError("Cannot change queue_out at runtime!")
+
+    @property
+    def noticer(self):
+        return self._condition_noticer
+
+    @noticer.setter
+    def noticer(self, value):
+        raise RuntimeError("Cannot change the noticer at runtime!")
 
 
 # test drive
@@ -332,7 +362,7 @@ def _test_2():
                           (x, y, area))
                 else:
                     print("No contour detected!")
-            time.sleep(time_interval + 0.02)
+            time.sleep(time_interval + 0.07)
     except KeyboardInterrupt:
         stop_event.set()
         th.join()
@@ -340,6 +370,31 @@ def _test_2():
         print("Exiting...")
 
 
+def _test_3():
+    time_interval = 0.05
+    th = ContourProducingThread(
+        time_interval = 0.05
+    )
+    q = th.queue_out
+    halt_ev = th.exit_event
+    noticer = th.noticer
+    th.start()
+    try:
+        while True:
+            with noticer:
+                result = noticer.wait(time_interval)
+                if result:
+                    x, y, area, _ = q.get()[0]
+                    print("Detected contour at (%d, %d) with area of %f" %
+                          (x, y, area))
+    except KeyboardInterrupt:
+        halt_ev.set()
+        th.join()
+        print()
+        print("Exiting...")
+
+
+
 # main
 if __name__ == '__main__':
-    _test_2()
+    _test_3()
