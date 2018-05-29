@@ -67,7 +67,7 @@ TODO:
 - [x] Motor
 - [x] camera
 - [x] An erl-like thread class.
-- [ ] Cam data drop policy
+- [x] Cam data drop policy
 - [ ] state-machine
 - [ ] The server interface
 
@@ -76,4 +76,5 @@ Deprecated:
 - [ ] Use sched to control exact ticks.(eg. 30tick/sec)
 
 Planned:
-- [ ] Rebuild the camera using erlthread
+- [x] Rebuild the camera using erlthread.
+      -> replaced by make it alike, instead of totally rebuild.
