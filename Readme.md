@@ -21,9 +21,10 @@ This repo currently contains the following modules:
   image to find the light object and put the coordinate into an
   given queue
 
-Some modules that passed the test but not belong to this repo :
+Some modules that being used but not belong to module `pycar`:
 - A simple TCP server that will receive connection from my PC
   and receive commands to control its movement.
+- A thread class that acts like an erl thread.
 
 Future development:
 - A state-machine or a behavior-tree based AI to control its movement
@@ -65,11 +66,14 @@ TODO:
 
 - [x] Motor
 - [x] camera
+- [x] An erl-like thread class.
+- [ ] Cam data drop policy
 - [ ] state-machine
 - [ ] The server interface
 
 Deprecated:
 - [ ] bluetooth controller(with multi-threading)
+- [ ] Use sched to control exact ticks.(eg. 30tick/sec)
 
 Planned:
-- [ ] Use sched to control exact ticks.(eg. 30tick/sec)
+- [ ] Rebuild the camera using erlthread
