@@ -33,7 +33,7 @@ TODO:
 # And the __all__, __version, __author__ are here too.
 
 
-__version__ = '0.0'
+__version__ = '0.1'
 __author__ = 'HexFaker'
 
 __all__ = [
@@ -41,7 +41,6 @@ __all__ = [
     'spawn',
     'send',
     'halt',
-    'receive',
 ]
 
 # Imports
@@ -58,9 +57,6 @@ DEFAULT_POLL_INTERVAL = 0.02
 # Functions and decorators
 
 # for the default behavior. May deprecate.
-
-def default_(env, msg):
-    return True
 
 
 def dummy(env, msg):
@@ -105,67 +101,6 @@ def halt(thread, timeout=None):
         thread.join()
     else:
         thread.join(timeout)
-
-
-def receive(poll_action, time_out=None):
-    """
-    Receive *all* the message from current thread and poll them.
-    if the poll_action returns True, the message is removed.
-    After polling, the unprocessed message will be put back.
-    This method will lock the thread's Condition lock.
-    """
-    th = threading.current_thread()
-    cv = th.notification
-    q = th.inbox
-    env = th.env
-    with cv:
-        result = cv.wait(time_out)
-        if result:
-            # Received message. The only trigger of polling.
-            msgs = []
-            while not q.empty():
-                msgs.append(q.get())
-            for i in range(len(msgs)):
-                message = msgs[i]
-                # poll
-                if poll_action(env, message):
-                    del msgs[i]
-            for message in msgs:
-                q.put(message)
-        return result
-
-
-def erl_loop(enter_action, poll_action,
-             tick_action, exit_action,
-             poll_interval=DEFAULT_POLL_INTERVAL):
-    """
-    Loop and tick.
-    """
-    th = threading.current_thread()
-    ev = th.exit_event
-    # cv = th.notification
-    # q = th.inbox
-    env = th.env
-
-    if poll_action is None:
-        poll_action = dummy
-
-    if enter_action is not None:
-        enter_action(env)
-
-    while not ev.is_set():
-        if tick_action is not None:
-            tick_timer = threading.Timer(poll_interval, tick_action, args=(env,))
-        result = receive(poll_action, poll_interval)
-        if not result and tick_action is not None:
-            tick_timer.join()
-
-    if exit_action is not None:
-        exit_action(env)
-
-
-def erl_empty():
-    pass
 
 
 def ticker(ev, job, *args):
@@ -213,7 +148,7 @@ class ErlThread(threading.Thread):
         self._message_handler = message_handler
         self._tick_action = tick_action
         self._poll_interval = poll_interval
-        self.env = env or {}
+        self._env = env or {}
 
     def run(self):
         while not self._exit_event.is_set():
@@ -263,59 +198,46 @@ class ErlThread(threading.Thread):
     def exit_event(self, value):
         raise RuntimeError("Cannot change the exit event of a thread!")
 
+    @property
+    def env(self):
+        return self._env
+
+    @env.setter
+    def env(self, value):
+        if isinstance(value, dict):
+            self._env = value
+        else:
+            raise ValueError("Environment should be a dict!")
+
 
 # simple test
-
-def _example_poll_handler(env, msg):
-    if 'certainkey' in env:
-        print(msg)
-        send(env['certainkey'], 'test')
-        if msg == 'test':
-            threading.current_thread().exit_event.set()
-    return True
-
-
-def _test_1():
-    env={}
-    th1 = spawn(
-        env=env, handler=erl_loop,
-        handler_args=(None, _example_poll_handler,
-                      None, None)
-    )
-    th2 = spawn(
-        env=env, handler=erl_loop,
-        handler_args=(None, dummy, None, None)
-    )
-    env['certainkey'] = th1
-
-    th1.start()
-    th2.start()
-    time.sleep(1)
-    send(th1, 'test')
-    send(th2, 'test')
-    time.sleep(1)
-    halt(th1)
-    th1.join()
-    th2.join()
-    print("_TEST_1")
 
 
 def _test_2():
     env={}
     def print_msg(env, msg):
         print("Message:", msg)
+    def tick_test(env):
+        print('Tick')
+        send(env['t1'], 'hello')
     def send_loop(env, msg):
         send(msg[0], msg)
     th1 = spawn(
-        env,
         message_handler=print_msg
     )
+    th2 = spawn(
+        tick_action=tick_test
+    )
+    env['t1'] = th1
+    th2.env = env
     th1.start()
+    th2.start()
     time.sleep(0.2)
     send(th1, 'hello')
     halt(th1)
-    th1.join(1)
+    halt(th2)
     print(th1.is_alive())
+    print(th2.is_alive())
 
 
 # main
@@ -323,73 +245,3 @@ def _test_2():
 if __name__ == '__main__':
     _test_2()
 
-
-# DEPRECATED
-
-# def _erl_poll(env, action_poll, poll_interval=DEFAULT_POLL_INTERVAL):
-#     """
-#     To poll over the action_poll when thread gets a message.
-#
-#     The action_poll is like this:
-#         [
-#             [predicator(env, msg), processor(env, msg)],
-#             [predicator(env, msg), processor(env, msg)],
-#             ...
-#             [predicator(env, msg), processor(env, msg)]
-#         ]
-#     """
-#     th = threading.current_thread()
-#     # print("Current thread:", th)
-#     # print("Thread inbox", th.inbox)
-#     # print("Thread condition", th.notification)
-#     # print("Thread exit", th.exit_event)
-#     # print("Action poll:", action_poll)
-#     # From here are the real code
-#
-#     q = th.inbox
-#     cv = th.notification
-#     ev = th.exit_event
-#
-#     while not ev.is_set():
-#         # lock condition
-#         with cv:
-#             result = cv.wait(poll_interval)
-#             if result:
-#                 # start poll
-#                 # get all message
-#                 msgs = []
-#                 while not q.empty():
-#                     msgs.append(q.get())
-#                 for i in range(len(msgs)):
-#                     message = msgs[i]
-#                     # poll
-#                     for predicator, processor in action_poll:
-#                         if predicator(env, message):
-#                             processor(env, message)
-#                             del msgs[i]
-#                             break
-#                 # put back
-#                 for message in msgs:
-#                     q.put(message)
-#                 time.sleep(poll_interval / 2)
-#             # poll over
-#     # exit the thread
-#     # debug
-#     # print("The thread is dead.")
-
-
-# def _erl_tick(env, action_poll, poll_interval=0.02):
-#     """
-#     Do some special job per poll_interval.
-#     -------------------------------------------
-#     The action_poll is like this:
-#         [
-#             func1(env),
-#             func2(env),
-#             ...
-#         ]
-#     and will call all func at once.
-#     """
-#     pass
-
-# EOF
