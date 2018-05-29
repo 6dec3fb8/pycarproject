@@ -166,8 +166,13 @@ class ErlThread(threading.Thread):
                 result = self._condition_getmsg.wait(self._poll_interval)
                 if result:
                     while not self._inbox.empty():
-                        msg = self._inbox.get()
-                        self._message_handler(self.env, msg)
+                        try:
+                            msg = self._inbox.get_nowait()
+                        except queue.Empty:
+                            # ERR! jump out
+                            break
+                        else:
+                            self._message_handler(self.env, msg)
                     if self._tick_action is not None:
                         tick_timer.join(self._poll_interval)
 
