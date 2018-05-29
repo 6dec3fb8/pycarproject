@@ -20,12 +20,6 @@ Basic structure:
     def halt:
         stop a thread by setting an event of that thread
 
---------------------------------------------------------------
-
-TODO:
-    - [x] class ErlThread
-    - [x] spawn, send and halt
-    - [ ] test
 
 """
 
@@ -101,6 +95,9 @@ def halt(thread, timeout=None):
         thread.join()
     else:
         thread.join(timeout)
+
+
+# for precious ticking
 
 
 def ticker(ev, job, *args):
