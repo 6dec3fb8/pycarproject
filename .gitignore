@@ -106,3 +106,6 @@ venv.bak/
 # logger files
 log/*.log
 log/*.log.*
+
+# ignore template
+/template.py
