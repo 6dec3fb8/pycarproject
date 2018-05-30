@@ -3,6 +3,11 @@
 # This file is the logging init functions.
 # The logging-relevant things are put together here.
 
+__all__ = [
+    'loggerinit',
+    'getLogger',
+]
+
 import logging
 import yaml
 
