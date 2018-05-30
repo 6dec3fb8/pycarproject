@@ -79,6 +79,7 @@ def _get_contour_list(
         img_proceed, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
     # img_contour = np.zeros((*img_proceed.shape, 3), dtype=np.uint8)
+    img_show = image
     if contours:
         # cv2.drawContours(img_contour, contours,
         # draw on source picture
@@ -130,9 +131,12 @@ class ContourProducingThread(threading.Thread):
     Produce the contour data.
     """
     def __init__(self, threshold=220, resolution=(640, 480),
-                 max_returns=1, framerate=25):
+                 max_returns=1, framerate=25, shutter_speed=6000,
+                 exposure_compensation=0):#-18):
         super(ContourProducingThread, self).__init__()
         self._vcam = PiCamera(resolution=resolution, framerate=framerate)
+        self._vcam.shutter_speed = shutter_speed
+        self._vcam.exposure_compensation = exposure_compensation
 
         self._queue = queue.Queue(2)
         self._exit_event = threading.Event()
@@ -156,7 +160,7 @@ class ContourProducingThread(threading.Thread):
         )
         while not self._exit_event.is_set():
             next(cam_iterator)
-            contour_info_list = _get_contour_list(image_capture)
+            contour_info_list = _get_contour_list(image_capture, show_image=True)
 
             # write
             with self._condition_noticer:
@@ -172,6 +176,8 @@ class ContourProducingThread(threading.Thread):
                 self._logger.info(
                     "Inserted an contour info."
                 )
+                time.sleep(0.015)
+        del cam_iterator
         self._vcam.close()
         self._logger.info(
             "The thread exits."
@@ -209,23 +215,28 @@ def _test_1():
     cv = th.noticer
     q = th.queue_out
     t0 = time.time()
+    th.start()
+    print("Start.")
     try:
-        with cv:
-            result=cv.wait(1/25)
-            if result:
-                contours = q.get()
-                if contours:
-                    x, y, area, _ = contour[0]
-                    print("[$f] contour(%d, %d) of area %f" %
-                        (time.time()-t0, x, y, area))
+        while True:
+            with cv:
+                result = cv.wait(1/10)
+                if result:
+                    contours = q.get()
+                    if contours:
+                        x, y, area, _ = contours[0]
+                        print("[%f] contour(%d, %d) of area %f" %
+                            (time.time()-t0, x, y, area))
+                    else:
+                        print("[%f] No contour." %
+                            (time.time()-t0))
                 else:
-                    print("[%f] No contour." %
-                        (time.time()-t0))
+                    print("Timeout")
+            time.sleep(1/10)
     except KeyboardInterrupt:
         th.exit_event.set()
         th.join()
         print("\nExiting...")
-
 
 
 if __name__ == '__main__':
